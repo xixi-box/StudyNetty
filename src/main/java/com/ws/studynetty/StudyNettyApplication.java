@@ -1,4 +1,4 @@
-package com.example.studynetty;
+package com.ws.studynetty;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

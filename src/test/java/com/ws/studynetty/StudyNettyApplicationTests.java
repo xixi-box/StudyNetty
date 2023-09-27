@@ -1,4 +1,4 @@
-package com.example.studynetty;
+package com.ws.studynetty;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

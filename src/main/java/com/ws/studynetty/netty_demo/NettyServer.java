@@ -1,4 +1,4 @@
-package com.example.studynetty.netty_demo;
+package com.ws.studynetty.netty_demo;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -20,17 +20,15 @@ public class NettyServer {
         serverBootstrap
                 //配置线程组
                 .group(bossGroup, workerGroup)
-                //指定线程组的模型为bio
+                //指定服务端的IO模型为nio
                 .channel(NioServerSocketChannel.class)
                 //连接业务的处理逻辑
                 .childHandler(new ChannelInitializer<NioSocketChannel>() {
-
                     /**
                      * @param nioSocketChannel
                      */
                     @Override
                     protected void initChannel(NioSocketChannel nioSocketChannel) {
-
                     }
                 });
         bind(serverBootstrap, 1000);
@@ -55,15 +53,12 @@ public class NettyServer {
     }
 
     private static void bind(final ServerBootstrap serverBootstrap, final int port) {
-        serverBootstrap.bind(port).addListener(new GenericFutureListener<Future<? super Void>>() {
-            @Override
-            public void operationComplete(Future<? super Void> future) throws Exception {
-                if (future.isSuccess()) {
-                    System.out.println("端口［" + port + "］绑定成功！");
-                } else {
-                    System.err.println("端口［" + port + "］绑定失败！");
-                    bind(serverBootstrap, port + 1);
-                }
+        serverBootstrap.bind(port).addListener(future -> {
+            if (future.isSuccess()) {
+                System.out.println("端口［" + port + "］绑定成功！");
+            } else {
+                System.err.println("端口［" + port + "］绑定失败！");
+                bind(serverBootstrap, port + 1);
             }
         });
 
