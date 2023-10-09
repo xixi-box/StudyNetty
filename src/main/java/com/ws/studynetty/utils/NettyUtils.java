@@ -44,7 +44,7 @@ public class NettyUtils {
                 if (LoginUtil.hasLogin(channel)) {
                     System.out.println("输入消息到服务端");
                     Scanner scanner = new Scanner(System.in);
-                    String msg = scanner.next();
+                    String msg = scanner.nextLine();
                     MessageRequestPacket messageRequestPacket = new MessageRequestPacket();
                     messageRequestPacket.setMessage(msg);
                     ByteBuf encode = PacketCodeC.INSTANCE.encode(messageRequestPacket);
