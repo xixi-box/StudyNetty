@@ -4,6 +4,7 @@ import com.ws.studynetty.GroupChat.codec.PacketCodecHandler;
 import com.ws.studynetty.GroupChat.codec.PacketDecoder;
 import com.ws.studynetty.GroupChat.codec.PacketEncoder;
 import com.ws.studynetty.GroupChat.codec.Spliter;
+import com.ws.studynetty.GroupChat.handle.IMIdleStateHandler;
 import com.ws.studynetty.GroupChat.server.handle.*;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -31,16 +32,15 @@ public class NettyServer {
                 .childOption(ChannelOption.TCP_NODELAY, true)
                 .childHandler(new ChannelInitializer<NioSocketChannel>() {
                     protected void initChannel(NioSocketChannel ch) {
+                        ch.pipeline().addLast(new IMIdleStateHandler());
                         ch.pipeline().addLast(new Spliter());
                         ch.pipeline().addLast(PacketCodecHandler.INSTANCE);
                         ch.pipeline().addLast(LoginRequestHandler.INSTANCE);
+                        ch.pipeline().addLast(HeartBeatRequestHandler.INSTANCE);
                         ch.pipeline().addLast(AuthHandler.INSTANCE);
                         ch.pipeline().addLast(IMHandler.INSTANCE);
-
                     }
                 });
-
-
         bind(serverBootstrap, PORT);
     }
 

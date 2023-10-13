@@ -6,6 +6,7 @@ import com.ws.studynetty.GroupChat.client.handle.*;
 import com.ws.studynetty.GroupChat.codec.PacketDecoder;
 import com.ws.studynetty.GroupChat.codec.PacketEncoder;
 import com.ws.studynetty.GroupChat.codec.Spliter;
+import com.ws.studynetty.GroupChat.handle.IMIdleStateHandler;
 import com.ws.studynetty.GroupChat.protocol.request.LoginRequestPacket;
 import com.ws.studynetty.GroupChat.protocol.request.MessageRequestPacket;
 import com.ws.studynetty.GroupChat.protocol.response.CreateGroupResponsePacket;
@@ -45,6 +46,7 @@ public class NettyClient {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel ch) {
+                        ch.pipeline().addLast(new IMIdleStateHandler());
                         ch.pipeline().addLast(new Spliter());
                         ch.pipeline().addLast(new PacketDecoder());
                         ch.pipeline().addLast(new LoginResponseHandler());
