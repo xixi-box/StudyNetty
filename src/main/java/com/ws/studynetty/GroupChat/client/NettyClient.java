@@ -1,12 +1,15 @@
-package com.ws.studynetty.HotPlug.client;
+package com.ws.studynetty.GroupChat.client;
 
-import com.ws.studynetty.HotPlug.client.handler.LoginResponseHandler;
-import com.ws.studynetty.HotPlug.client.handler.MessageResponseHandler;
-import com.ws.studynetty.HotPlug.codec.PacketDecoder;
-import com.ws.studynetty.HotPlug.codec.PacketEncoder;
-import com.ws.studynetty.HotPlug.codec.Spliter;
-import com.ws.studynetty.HotPlug.protocol.request.MessageRequestPacket;
-import com.ws.studynetty.HotPlug.util.LoginUtil;
+import com.ws.studynetty.GroupChat.client.console.ConsoleCommandManager;
+import com.ws.studynetty.GroupChat.client.console.LoginConsoleCommand;
+import com.ws.studynetty.GroupChat.client.handle.*;
+import com.ws.studynetty.GroupChat.codec.PacketDecoder;
+import com.ws.studynetty.GroupChat.codec.PacketEncoder;
+import com.ws.studynetty.GroupChat.codec.Spliter;
+import com.ws.studynetty.GroupChat.protocol.request.LoginRequestPacket;
+import com.ws.studynetty.GroupChat.protocol.request.MessageRequestPacket;
+import com.ws.studynetty.GroupChat.protocol.response.CreateGroupResponsePacket;
+import com.ws.studynetty.GroupChat.util.SessionUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -16,13 +19,12 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
-
 import java.util.Date;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author 闪电侠
+ *
  */
 public class NettyClient {
     private static final int MAX_RETRY = 5;
@@ -47,6 +49,12 @@ public class NettyClient {
                         ch.pipeline().addLast(new PacketDecoder());
                         ch.pipeline().addLast(new LoginResponseHandler());
                         ch.pipeline().addLast(new MessageResponseHandler());
+                        ch.pipeline().addLast(new CreateGroupResponseHandler());
+                        ch.pipeline().addLast(new JoinGroupResponseHandler());
+                        ch.pipeline().addLast(new ListGroupMembersResponseHandler());
+                        ch.pipeline().addLast(new QuitGroupResponseHandler());
+                        ch.pipeline().addLast(new GroupMessageResponseHandler());
+                        ch.pipeline().addLast(new LogoutResponseHandler());
                         ch.pipeline().addLast(new PacketEncoder());
                     }
                 });
@@ -75,16 +83,24 @@ public class NettyClient {
     }
 
     private static void startConsoleThread(Channel channel) {
+        ConsoleCommandManager consoleCommandManager = new ConsoleCommandManager();
+        LoginConsoleCommand loginConsoleCommand = new LoginConsoleCommand();
+        Scanner scanner = new Scanner(System.in);
         new Thread(() -> {
             while (!Thread.interrupted()) {
-                if (LoginUtil.hasLogin(channel)) {
-                    System.out.println("输入消息发送至服务端: ");
-                    Scanner sc = new Scanner(System.in);
-                    String line = sc.nextLine();
-
-                    channel.writeAndFlush(new MessageRequestPacket(line));
-                }
+                if (!SessionUtil.hasLogin(channel))
+                    loginConsoleCommand.exec(scanner, channel);
+                else
+                    consoleCommandManager.exec(scanner, channel);
             }
         }).start();
+    }
+
+
+    private static void waitForLoginResponse() {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ignored) {
+        }
     }
 }

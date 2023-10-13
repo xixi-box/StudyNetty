@@ -1,12 +1,13 @@
-package com.ws.studynetty.HotPlug.client;
+package com.ws.studynetty.ChatWithEachOther.client;
 
-import com.ws.studynetty.HotPlug.client.handler.LoginResponseHandler;
-import com.ws.studynetty.HotPlug.client.handler.MessageResponseHandler;
-import com.ws.studynetty.HotPlug.codec.PacketDecoder;
-import com.ws.studynetty.HotPlug.codec.PacketEncoder;
-import com.ws.studynetty.HotPlug.codec.Spliter;
-import com.ws.studynetty.HotPlug.protocol.request.MessageRequestPacket;
-import com.ws.studynetty.HotPlug.util.LoginUtil;
+import com.ws.studynetty.ChatWithEachOther.client.handle.LoginResponseHandler;
+import com.ws.studynetty.ChatWithEachOther.client.handle.MessageResponseHandler;
+import com.ws.studynetty.ChatWithEachOther.codec.PacketDecoder;
+import com.ws.studynetty.ChatWithEachOther.codec.PacketEncoder;
+import com.ws.studynetty.ChatWithEachOther.codec.Spliter;
+import com.ws.studynetty.ChatWithEachOther.protocol.request.LoginRequestPacket;
+import com.ws.studynetty.ChatWithEachOther.protocol.request.MessageRequestPacket;
+import com.ws.studynetty.ChatWithEachOther.util.SessionUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -16,13 +17,12 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
-
 import java.util.Date;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author 闪电侠
+ *
  */
 public class NettyClient {
     private static final int MAX_RETRY = 5;
@@ -75,16 +75,36 @@ public class NettyClient {
     }
 
     private static void startConsoleThread(Channel channel) {
+        Scanner sc = new Scanner(System.in);
+        LoginRequestPacket loginRequestPacket = new LoginRequestPacket();
+
         new Thread(() -> {
             while (!Thread.interrupted()) {
-                if (LoginUtil.hasLogin(channel)) {
-                    System.out.println("输入消息发送至服务端: ");
-                    Scanner sc = new Scanner(System.in);
-                    String line = sc.nextLine();
+                if (!SessionUtil.hasLogin(channel)) {
+                    System.out.print("输入用户名登录: ");
+                    String username = sc.nextLine();
+                    loginRequestPacket.setUsername(username);
 
-                    channel.writeAndFlush(new MessageRequestPacket(line));
+                    // 密码使用默认的
+                    loginRequestPacket.setPassword("pwd");
+
+                    // 发送登录数据包
+                    channel.writeAndFlush(loginRequestPacket);
+                    waitForLoginResponse();
+                } else {
+                    String toUserId = sc.next();
+                    String message = sc.next();
+                    channel.writeAndFlush(new MessageRequestPacket(toUserId, message));
                 }
             }
         }).start();
+    }
+
+
+    private static void waitForLoginResponse() {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ignored) {
+        }
     }
 }
